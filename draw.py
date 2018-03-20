@@ -3,17 +3,55 @@ from matrix import *
 from math import *
 
 def add_box( points, x, y, z, width, height, depth ):
-    pass
+    add_edge(points, x, y, z, x + width, y, z)
+    add_edge(points, x, y, z, x, y + height, z)
+    add_edge(points, x, y, z, x, y, z + depth)
+    add_edge(points, x + width, y, z, x + width, y, z + depth)
+    add_edge(points, x, y, z + depth, x + width, y, z + depth)
+    add_edge(points, x, y, z + depth, x, y + height, z + depth)
+    add_edge(points, x + width, y, z + depth, x + width, y + height, z + depth)
+    add_edge(points, x + width, y, z, x + width, y + height, z)
+    add_edge(points, x + width, y + height, z + depth, x, y + height, z + depth)
+    add_edge(points, x, y + height, z + depth, x, y + height, z)
+    add_edge(points, x, y + height, z, x + width, y + height, z)
+    add_edge(points, x + width, y + height, z, x + width, y + height, z + depth)
 
 def add_sphere( points, cx, cy, cz, r, step ):
-    pass
+    sphere = new_matrix()
+    generate_sphere(points, cx, cy, cz, r, step)
+    for u in sphere:
+        add_edge(points, u[0], u[1], u[2], u[0] + 1, u[1], u[2])
+
 def generate_sphere( points, cx, cy, cz, r, step ):
-    pass
+    rot_matrix = make_rotY(float(360) / step)
+    i = 1
+    while i <= step:
+        t = float(i)/step
+        add_circle(points, 0, 0, 0, r, step)
+        matrix_mult(rot_matrix, points)
+        i += 1
+    #The sphere might not be at origin, so we must move it from the origin
+    move = make_translate(cx, cy, cz)
+    matrix_mult(move, points)
 
 def add_torus( points, cx, cy, cz, r0, r1, step ):
-    pass
+    torus = new_matrix()
+    generate_torus(torus, cx, cy, cz, r0, r1, step)
+    for u in torus:
+        add_edge(points, u[0], u[1], u[2], u[0]+1, u[1]+1, u[2])
+
 def generate_torus( points, cx, cy, cz, r0, r1, step ):
-    pass
+    rot_matrix = make_rotY(float(360) / step)
+    i = 1
+    while i <= step:
+        t = float(i)/step
+        add_circle(points, r1, 0, 0, r0, step)
+        matrix_mult(rot_matrix, points)
+        i += 1
+    move = make_translate(cx, cy, cz)
+    matrix_mult(move, points)
+    rotx = make_rotX(90)
+    matrix_mult(rotx, points)
 
 def add_circle( points, cx, cy, cz, r, step ):
     x0 = r + cx
@@ -49,23 +87,23 @@ def draw_lines( matrix, screen, color ):
     if len(matrix) < 2:
         print 'Need at least 2 points to draw'
         return
-    
+
     point = 0
     while point < len(matrix) - 1:
         draw_line( int(matrix[point][0]),
                    int(matrix[point][1]),
                    int(matrix[point+1][0]),
                    int(matrix[point+1][1]),
-                   screen, color)    
+                   screen, color)
         point+= 2
-        
+
 def add_edge( matrix, x0, y0, z0, x1, y1, z1 ):
     add_point(matrix, x0, y0, z0)
     add_point(matrix, x1, y1, z1)
-    
+
 def add_point( matrix, x, y, z=0 ):
     matrix.append( [x, y, z, 1] )
-    
+
 
 
 
@@ -89,7 +127,7 @@ def draw_line( x0, y0, x1, y1, screen, color ):
     if ( abs(x1-x0) >= abs(y1 - y0) ):
 
         #octant 1
-        if A > 0:            
+        if A > 0:
             d = A + B/2
 
             while x < x1:
